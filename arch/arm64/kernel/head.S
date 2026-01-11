@@ -42,6 +42,19 @@
 #endif
 
 /*
+ * PAGE_OFFSET & 0x1fffff == 0
+ * -(1 << VA_BITS) % 2MB == 0
+ * -(1 << 39) & (2 << 20 - 1) == 0
+ *  -(0x0000_0080_0000_0000)     & 0x0000_0000_001F_FFFF == 0
+ *  (~0x0000_0080_0000_0000 + 1) & 0x0000_0000_001F_FFFF == 0
+ *   (0xFFFF_FF7F_FFFF_FFFF + 1) & 0x0000_0000_001F_FFFF == 0
+ *    0xFFFF_FF80_0000_0000      & 0x0000_0000_001F_FFFF == 0
+ * 25 ones, 39 zeros
+ * n(zeros) >= 21
+ * VA_BITS >= 21
+ */
+
+/*
  * Kernel startup entry point.
  * ---------------------------
  *
@@ -77,7 +90,7 @@
 	 * primary lowlevel boot path:
 	 *
 	 *  Register   Scope                      Purpose
-	 *  x19        primary_entry() .. start_kernel()        whether we entered with the MMU on
+	 *  x19        primary_entry() .. start_kernel()        whether we entered with the (MMU on && Dcache on), Dcache requires MMU
 	 *  x20        primary_entry() .. __primary_switch()    CPU boot mode
 	 *  x21        primary_entry() .. start_kernel()        FDT pointer passed at boot in x0
 	 */
@@ -137,11 +150,16 @@ SYM_CODE_START_LOCAL(record_mmu_state)
 	b.ne	0f
 	mrs	x19, sctlr_el2
 0:
-CPU_LE( tbnz	x19, #SCTLR_ELx_EE_SHIFT, 1f	)
-CPU_BE( tbz	x19, #SCTLR_ELx_EE_SHIFT, 1f	)
-	tst	x19, #SCTLR_ELx_C		// Z := (C == 0)
-	and	x19, x19, #SCTLR_ELx_M		// isolate M bit
-	csel	x19, xzr, x19, eq		// clear x19 if Z
+/*
+	bool was_cache_disabled = tst(x19, #SCTLR_ELx_C);
+	x19 = sctlr_elx & SCTLR_ELx_M;
+	if (was_cache_disabled)
+		x19 = 0;
+*/
+	tbnz	x19, #SCTLR_ELx_EE_SHIFT, 1f
+	tst	x19, #SCTLR_ELx_C		// Z := (C == 0),
+	and	x19, x19, #SCTLR_ELx_M		// isolate M bit, M := MMU Enable
+	csel	x19, xzr, x19, eq		// clear x19 if Cache was disabled
 	ret
 
 	/*
@@ -151,8 +169,8 @@ CPU_BE( tbz	x19, #SCTLR_ELx_EE_SHIFT, 1f	)
 	 * up getting interpreted with the wrong byte order.
 	 */
 1:	eor	x19, x19, #SCTLR_ELx_EE
-	bic	x19, x19, #SCTLR_ELx_M
-	b.ne	2f
+	bic	x19, x19, #SCTLR_ELx_M // x19 = x19 & ~SCTLR_ELx_M
+	b.ne	2f // refer to "cmp	x19, #CurrentEL_EL2", if (EL1) goto 2;
 	pre_disable_mmu_workaround
 	msr	sctlr_el2, x19
 	b	3f
@@ -177,7 +195,7 @@ SYM_CODE_START_LOCAL(preserve_boot_args)
 	dmb	sy				// needed before dc ivac with
 						// MMU off
 
-	add	x1, x0, #0x20			// 4 x 8 bytes
+	add	x1, x0, #0x20			// 4 x 8 bytes, x0 = &boot_args[0], x1 = &boot_args[4] (past-the-end)
 	b	dcache_inval_poc		// tail call
 0:	str_l   x19, mmu_enabled_at_boot, x0
 	ret

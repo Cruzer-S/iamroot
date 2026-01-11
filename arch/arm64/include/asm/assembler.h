@@ -129,21 +129,14 @@ lr	.req	x30		// link register
 	.endm
 
 /*
- * Select code when configured for BE.
- */
-#ifdef CONFIG_CPU_BIG_ENDIAN
-#define CPU_BE(code...) code
-#else
-#define CPU_BE(code...)
-#endif
-
-/*
- * Select code when configured for LE.
+ * Select code when configured for LE or BE.
  */
 #ifdef CONFIG_CPU_BIG_ENDIAN
 #define CPU_LE(code...)
+#define CPU_BE(code...) code
 #else
 #define CPU_LE(code...) code
+#define CPU_BE(code...)
 #endif
 
 /*
@@ -168,8 +161,8 @@ lr	.req	x30		// link register
 	 * @sym: name of the symbol
 	 */
 	.macro	adr_l, dst, sym
-	adrp	\dst, \sym
-	add	\dst, \dst, :lo12:\sym
+	adrp	\dst, \sym // dst = $pc + (sym & 0xffff_ffff_ffff_f000)
+	add	\dst, \dst, :lo12:\sym // dst = dst + (sym & 0xfff)
 	.endm
 
 	/*
@@ -297,9 +290,9 @@ alternative_cb_end
  */
 	.macro	dcache_line_size, reg, tmp
 	read_ctr	\tmp
-	ubfm		\tmp, \tmp, #16, #19	// cache line size encoding
-	mov		\reg, #4		// bytes per word
-	lsl		\reg, \reg, \tmp	// actual cache line size
+	ubfm		\tmp, \tmp, #16, #19	// cache line size encoding, tmp = log2(DMinLine)
+	mov		\reg, #4		// bytes per word, reg = 4
+	lsl		\reg, \reg, \tmp	// actual cache line size, reg *= pow(2, tmp)
 	.endm
 
 /*

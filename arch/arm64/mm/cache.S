@@ -142,24 +142,60 @@ SYM_FUNC_END(dcache_clean_pou)
  *	- start   - kernel start address of region
  *	- end     - kernel end address of region
  */
+
+/*
+ *	|-------|-------|-------|-------|-------|-------|-------|-------|-------|
+ *	   ^                                                                 ^
+ *	   x0                                                                x1
+ */
 SYM_FUNC_START(__pi_dcache_inval_poc)
 	dcache_line_size x2, x3
 	sub	x3, x2, #1
 	tst	x1, x3				// end cache line aligned?
-	bic	x1, x1, x3
-	b.eq	1f
+	bic	x1, x1, x3			// align end cache line
+	b.eq	1f				// if aligned, skip end cache line
 	dc	civac, x1			// clean & invalidate D / U line
+/*
+ *	|-------|-------|-------|-------|-------|-------|-------|-------|xxxxxxx|
+ *	   ^                                                            ^
+ *	   x0                                                           x1'
+ */
 1:	tst	x0, x3				// start cache line aligned?
-	bic	x0, x0, x3
-	b.eq	2f
+	bic	x0, x0, x3			// align start cache line
+	b.eq	2f				// if aligned, skip
 	dc	civac, x0			// clean & invalidate D / U line
+/*
+ *	|xxxxxxx|-------|-------|-------|-------|-------|-------|-------|xxxxxxx|
+ *	^                                                               ^
+ *	x0'                                                             x1'
+ */
 	b	3f
 2:	dc	ivac, x0			// invalidate D / U line
-3:	add	x0, x0, x2
+/*
+ *  clean & inval |     inval
+ * ---------------+---------------
+ *  flush cache   | do not flush
+ *    to memory   |   to memory,
+ *                |   just drop
+ */
+/*
+ *	after first iteration
+ *	|xxxxxxx|XXXXXXX|-------|-------|-------|-------|-------|-------|xxxxxxx|
+ *	        ^                                                       ^
+ *	        x0''                                                    x1'
+ */
+3:	add	x0, x0, x2			// increase x0 by one cache line
 	cmp	x0, x1
 	b.lo	2b
 	dsb	sy
 	ret
+/*
+ *	after last iteration
+ *	|xxxxxxx|XXXXXXX|XXXXXXX|XXXXXXX|XXXXXXX|XXXXXXX|XXXXXXX|XXXXXXX|xxxxxxx|
+ *	                                                                ^
+ *	                                                                x0'''
+ *	                                                                x1'
+ */
 SYM_FUNC_END(__pi_dcache_inval_poc)
 SYM_FUNC_ALIAS(dcache_inval_poc, __pi_dcache_inval_poc)
 
