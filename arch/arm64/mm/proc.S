@@ -451,11 +451,11 @@ SYM_FUNC_END(idmap_kpti_install_ng_mappings)
 	.pushsection ".idmap.text", "a"
 SYM_FUNC_START(__cpu_setup)
 	tlbi	vmalle1				// Invalidate local TLB
-	dsb	nsh
+	dsb	nsh // work only with non-sharable memory
 
 	msr	cpacr_el1, xzr			// Reset cpacr_el1
 	mov	x1, #1 << 12			// Reset mdscr_el1 and disable
-	msr	mdscr_el1, x1			// access to the DCC from EL0
+	msr	mdscr_el1, x1			// access to the DCC from EL0, mdscr_el1 = #1 << 12
 	reset_pmuserenr_el0 x1			// Disable PMU access from EL0
 	reset_amuserenr_el0 x1			// Disable AMU access from EL0
 
@@ -463,8 +463,8 @@ SYM_FUNC_START(__cpu_setup)
 	 * Default values for VMSA control registers. These will be adjusted
 	 * below depending on detected CPU features.
 	 */
-	mair	.req	x17
-	tcr	.req	x16
+	mair	.req	x17  // #define mair x17
+	tcr	.req	x16  // #define mair x16
 	mov_q	mair, MAIR_EL1_SET
 	mov_q	tcr, TCR_T0SZ(IDMAP_VA_BITS) | TCR_T1SZ(VA_BITS_MIN) | TCR_CACHE_FLAGS | \
 		     TCR_SHARED | TCR_TG_FLAGS | TCR_KASLR_FLAGS | TCR_ASID16 | \
@@ -472,9 +472,10 @@ SYM_FUNC_START(__cpu_setup)
 
 	tcr_clear_errata_bits tcr, x9, x5
 
-#ifdef CONFIG_ARM64_VA_BITS_52
-	mov		x9, #64 - VA_BITS
-alternative_if ARM64_HAS_VA52
+// 52bit VA / 12 bit .. 0??
+#ifdef CONFIG_ARM64_VA_BITS_52	// == Large Pysical Address support   <--> normal case 48 bit(IPS 설정에 따라 다름)
+	mov		x9, #64 - VA_BITS  // x9 == 12
+alternative_if ARM64_HAS_VA52	// architecture에서 VA52를 지원하는지(capability) 체크
 	tcr_set_t1sz	tcr, x9
 #ifdef CONFIG_ARM64_LPA2
 	orr		tcr, tcr, #TCR_DS
