@@ -347,7 +347,9 @@ alternative_cb_end
  *	pos:		IPS or PS bitfield position
  *	tmp{0,1}:	temporary registers
  */
-	.macro	tcr_compute_pa_size, tcr, pos, tmp0, tmp1  //tc,  #TCR_IPS_SHIFT x5, x6
+	// passed arguments are
+	//	tcr = x16,  pos = #TCR_IPS_SHIFT, tmp0 = x5, tmp1 = x6
+	.macro	tcr_compute_pa_size, tcr, pos, tmp0, tmp1
 	mrs	\tmp0, ID_AA64MMFR0_EL1  // x5
 	// Narrow PARange to fit the PS field in TCR_ELx
 	ubfx	\tmp0, \tmp0, #ID_AA64MMFR0_EL1_PARANGE_SHIFT, #3
@@ -455,7 +457,7 @@ alternative_endif
  * pgtbl preserved
  * tmp1/tmp2 clobbered, either may overlap with pgtbl
  */
-	//load_ttbr1 x1, x1, x3
+	// passed arguments from head.S are pgtbl = x1, tmp1 = x1, tmp2 = x3
 	.macro		load_ttbr1, pgtbl, tmp1, tmp2
 	phys_to_ttbr	\tmp1, \pgtbl
 	offset_ttbr1 	\tmp1, \tmp2
