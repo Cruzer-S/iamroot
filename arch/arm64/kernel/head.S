@@ -132,7 +132,7 @@ SYM_CODE_START(primary_entry)
 	 * the TCR will have been set.
 	 */
 	bl	__cpu_setup			// initialise processor
-	//	mov_q	x0, INIT_SCTLR_EL1_MMU_ON
+	// initialise processor, finished with mov_q x0, INIT_SCTLR_EL1_MMU_ON
 	b	__primary_switch
 SYM_CODE_END(primary_entry)
 
@@ -543,8 +543,8 @@ SYM_FUNC_END(__no_granule_support)
 SYM_FUNC_START_LOCAL(__primary_switch)
 
 		// x0  = SCTLR_EL1 value for turning on the MMU.
-	adrp	x1, reserved_pg_dir  //TTBR1_EL1 ??             // ffffffc0812a1000   reserved_pg_dir
-	adrp	x2, init_idmap_pg_dir  //x2  = ID map root table address          // ffffffc081360000  init_idmap_pg_dir
+	adrp	x1, reserved_pg_dir
+	adrp	x2, init_idmap_pg_dir
 	bl	__enable_mmu
 
 	adrp	x1, early_init_stack
