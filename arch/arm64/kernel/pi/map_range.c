@@ -26,6 +26,8 @@
  * @va_offset:		Offset between a physical page and its current mapping
  * 			in the VA space
  */
+// 4KB Granule : pte(level0 : 9bit) → pmd(level1 : 9bit) → pud(level2 : 9bit) → p4d(level3 : 9bit)
+// 9bit => 512 entrys
 void __init map_range(u64 *pte, u64 start, u64 end, u64 pa, pgprot_t prot,
 		      int level, pte_t *tbl, bool may_use_cont, u64 va_offset)
 {
