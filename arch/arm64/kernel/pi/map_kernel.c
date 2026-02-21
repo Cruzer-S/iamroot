@@ -212,11 +212,11 @@ asmlinkage void __init early_map_kernel(u64 boot_status, void *fdt)
 	static char const chosen_str[] __initconst = "/chosen";
 	u64 va_base, pa_base = (u64)&_text;
 	u64 kaslr_offset = pa_base % MIN_KIMG_ALIGN;
-	int root_level = 4 - CONFIG_PGTABLE_LEVELS;
+	int root_level = 4 - CONFIG_PGTABLE_LEVELS; // -1 <= root_level <= 2
 	int va_bits = VA_BITS;
 	int chosen;
 
-	map_fdt((u64)fdt);
+	map_fdt((u64)fdt); // mapping to the init_idmap_pg_dir
 
 	/* Clear BSS and the initial page tables */
 	memset(__bss_start, 0, (u64)init_pg_end - (u64)__bss_start);
