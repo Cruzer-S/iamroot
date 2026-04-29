@@ -546,7 +546,7 @@ SYM_FUNC_START_LOCAL(__primary_switch)
 	adrp	x1, reserved_pg_dir
 	adrp	x2, init_idmap_pg_dir
 	bl	__enable_mmu
-	// after this, ttbr0_el1 = x1, ttbr1_el2 = x2
+	// after this, ttbr0_el1 = x2, ttbr1_el2 = x1
 
 	adrp	x1, early_init_stack
 	mov	sp, x1
