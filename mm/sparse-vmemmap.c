@@ -67,7 +67,7 @@ void * __meminit vmemmap_alloc_block(unsigned long size, int node)
 		return NULL;
 	} else
 		return __earlyonly_bootmem_alloc(node, size, size,
-				__pa(MAX_DMA_ADDRESS));
+				__pa(MAX_DMA_ADDRESS)); // = start_of_dram but should not alloc to DMA area
 }
 
 static void * __meminit altmap_alloc_block_buf(unsigned long size,
@@ -458,7 +458,7 @@ struct page * __meminit __populate_section_memmap(unsigned long pfn,
 		unsigned long nr_pages, int nid, struct vmem_altmap *altmap,
 		struct dev_pagemap *pgmap)
 {
-	unsigned long start = (unsigned long) pfn_to_page(pfn);
+	unsigned long start = (unsigned long) pfn_to_page(pfn); // (PA oriented) PFN -> 해당 PFN 를 관리하는 struct page * (VA)
 	unsigned long end = start + nr_pages * sizeof(struct page);
 	int r;
 

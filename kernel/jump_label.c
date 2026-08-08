@@ -551,7 +551,7 @@ void __init jump_label_init(void)
 
 		/* rewrite NOPs */
 		if (jump_label_type(iter) == JUMP_LABEL_NOP)
-			arch_jump_label_transform_static(iter, JUMP_LABEL_NOP);
+			arch_jump_label_transform_static(iter, JUMP_LABEL_NOP); // Nop at arm64
 
 		in_init = init_section_contains((void *)jump_entry_code(iter), 1);
 		jump_entry_set_init(iter, in_init);

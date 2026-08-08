@@ -137,19 +137,19 @@ static void __init zone_sizes_init(void)
 	 * Some of them rely on DMA zone in low 32-bit memory. Keep low RAM
 	 * DMA zone on platforms that have RAM there.
 	 */
-	if (memblock_start_of_DRAM() < U32_MAX)
+	if (memblock_start_of_DRAM() < U32_MAX) // 4G 미만이면 
 		zone_dma_limit = min(zone_dma_limit, U32_MAX);
 	arm64_dma_phys_limit = max_zone_phys(zone_dma_limit);
 	max_zone_pfns[ZONE_DMA] = PFN_DOWN(arm64_dma_phys_limit);
 #endif
 #ifdef CONFIG_ZONE_DMA32
 	max_zone_pfns[ZONE_DMA32] = PFN_DOWN(dma32_phys_limit);
-	if (!arm64_dma_phys_limit)
+	if (!arm64_dma_phys_limit) // DMA 가 없을때 
 		arm64_dma_phys_limit = dma32_phys_limit;
 #endif
-	if (!arm64_dma_phys_limit)
+	if (!arm64_dma_phys_limit) // DMA and DMA 32 둘다 없으면
 		arm64_dma_phys_limit = PHYS_MASK + 1;
-	max_zone_pfns[ZONE_NORMAL] = max_pfn;
+	max_zone_pfns[ZONE_NORMAL] = max_pfn; // end of dram 
 
 	free_area_init(max_zone_pfns);
 }
@@ -220,7 +220,7 @@ void __init arm64_memblock_init(void)
 	 */
 	memblock_remove(max_t(u64, memstart_addr + linear_region_size,
 			__pa_symbol(_end)), ULLONG_MAX);
-	if (memstart_addr + linear_region_size < memblock_end_of_DRAM()) {
+	if (memstart_addr + linear_region_size < memblock_end_of_DRAM()) { // if previous max_t(...) result is __pa_symbol(_end)
 		/* ensure that memstart_addr remains sufficiently aligned */
 		memstart_addr = round_up(memblock_end_of_DRAM() - linear_region_size,
 					 ARM64_MEMSTART_ALIGN);
@@ -282,7 +282,7 @@ void __init arm64_memblock_init(void)
 		int parange = cpuid_feature_extract_unsigned_field(
 					mmfr0, ID_AA64MMFR0_EL1_PARANGE_SHIFT);
 		s64 range = linear_region_size -
-			    BIT(id_aa64mmfr0_parange_to_phys_shift(parange));
+			    BIT(id_aa64mmfr0_parange_to_phys_shift(parange)); // Physical address range supported, 
 
 		/*
 		 * If the size of the linear region exceeds, by a sufficient
@@ -342,7 +342,7 @@ void __init bootmem_init(void)
 	 * done after the fixed reservations
 	 */
 	sparse_init();
-	zone_sizes_init();
+	zone_sizes_init(); // setup pgdat, zone, page
 
 	/*
 	 * Reserve the CMA area after arm64_dma_phys_limit was initialised.

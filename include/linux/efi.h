@@ -565,7 +565,7 @@ struct efi_memory_map_data {
 
 struct efi_memory_map {
 	phys_addr_t phys_map;
-	void *map;
+	void *map; // at boot, return of early_ioremap 
 	void *map_end;
 	int nr_map;
 	unsigned long desc_version;

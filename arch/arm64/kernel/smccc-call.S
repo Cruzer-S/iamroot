@@ -10,12 +10,12 @@
 
 	.macro SMCCC instr
 	\instr	#0
-	ldr	x4, [sp]
-	stp	x0, x1, [x4, #ARM_SMCCC_RES_X0_OFFS]
-	stp	x2, x3, [x4, #ARM_SMCCC_RES_X2_OFFS]
-	ldr	x4, [sp, #8]
-	cbz	x4, 1f /* no quirk structure */
-	ldr	x9, [x4, #ARM_SMCCC_QUIRK_ID_OFFS]
+	ldr	x4, [sp] // x4 = [arm_smccc_res]
+	stp	x0, x1, [x4, #ARM_SMCCC_RES_X0_OFFS] // arm_smccc_res.a0 = x0, arm_smccc_res.a1 = x1
+	stp	x2, x3, [x4, #ARM_SMCCC_RES_X2_OFFS] // arm_smccc_res.a2 = x2, arm_smccc_res.a3 = x3
+	ldr	x4, [sp, #8] // x4 = [arm_smccc_quirk]
+	cbz	x4, 1f /* no quirk structure */ // if (!quirk) return;
+	ldr	x9, [x4, #ARM_SMCCC_QUIRK_ID_OFFS] // x9 = arm_smccc_quirk.id
 	cmp	x9, #ARM_SMCCC_QUIRK_QCOM_A6
 	b.ne	1f
 	str	x6, [x4, ARM_SMCCC_QUIRK_STATE_OFFS]

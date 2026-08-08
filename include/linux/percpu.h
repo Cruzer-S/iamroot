@@ -16,9 +16,9 @@
 /* enough to cover all DEFINE_PER_CPUs in modules */
 #ifdef CONFIG_MODULES
 #ifdef CONFIG_MEM_ALLOC_PROFILING
-#define PERCPU_MODULE_RESERVE		(8 << 13)
+#define PERCPU_MODULE_RESERVE		(8 << 13) // 64KB
 #else
-#define PERCPU_MODULE_RESERVE		(8 << 10)
+#define PERCPU_MODULE_RESERVE		(8 << 10) // 8KB
 #endif
 #else
 #define PERCPU_MODULE_RESERVE		0
@@ -71,7 +71,7 @@
  * intelligent way to determine this would be nice.
  */
 #if BITS_PER_LONG > 32
-#define PERCPU_DYNAMIC_RESERVE		(28 << PERCPU_DYNAMIC_SIZE_SHIFT)
+#define PERCPU_DYNAMIC_RESERVE		(28 << PERCPU_DYNAMIC_SIZE_SHIFT) // without hardening, 28KB
 #else
 #define PERCPU_DYNAMIC_RESERVE		(20 << PERCPU_DYNAMIC_SIZE_SHIFT)
 #endif

@@ -5,7 +5,7 @@
 #include <linux/numa.h>
 #include <linux/numa_memblks.h>
 
-struct pglist_data *node_data[MAX_NUMNODES];
+struct pglist_data *node_data[MAX_NUMNODES]; // pg_data_t
 EXPORT_SYMBOL(node_data);
 
 /* Allocate NODE_DATA for a node on the local memory */

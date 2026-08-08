@@ -749,11 +749,11 @@ void __init smp_init_cpus(void)
 	int i;
 
 	if (acpi_disabled)
-		of_parse_and_init_cpus();
+		of_parse_and_init_cpus(); // all cpu: setup cpu_to_node_map and set_cpu_logical_map, boot cpu: set_cpu_numa_node
 	else
 		acpi_parse_and_init_cpus();
 
-	if (cpu_count > nr_cpu_ids)
+	if (cpu_count > nr_cpu_ids) // unsigned int nr_cpu_ids __read_mostly = NR_CPUS, can be controlled by early_param
 		pr_warn("Number of cores (%d) exceeds configured maximum of %u - clipping\n",
 			cpu_count, nr_cpu_ids);
 
@@ -770,8 +770,8 @@ void __init smp_init_cpus(void)
 	 * If the cpu set-up fails, invalidate the cpu_logical_map entry.
 	 */
 	for (i = 1; i < nr_cpu_ids; i++) {
-		if (cpu_logical_map(i) != INVALID_HWID) {
-			if (smp_cpu_setup(i))
+		if (cpu_logical_map(i) != INVALID_HWID) { // if already initialized
+			if (smp_cpu_setup(i)) // init_cpu_ops + set_cpu_possible
 				set_cpu_logical_map(i, INVALID_HWID);
 		}
 	}

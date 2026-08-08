@@ -115,8 +115,8 @@ static void __init smp_build_mpidr_hash(void)
 	 * Pre-scan the list of MPIDRS and filter out bits that do
 	 * not contribute to affinity levels, ie they never toggle.
 	 */
-	for_each_possible_cpu(i)
-		mask |= (cpu_logical_map(i) ^ cpu_logical_map(0));
+	for_each_possible_cpu(i) // cpu_logical_map(0) = MPIDR = dtb reg = generally 0 
+		mask |= (cpu_logical_map(i) ^ cpu_logical_map(0)); // generally all possible cpu mpdir or
 	pr_debug("mask of set bits %#llx\n", mask);
 	/*
 	 * Find and stash the last and first bit set at all affinity levels to
@@ -129,9 +129,9 @@ static void __init smp_build_mpidr_hash(void)
 		 * to determine how many bits are required
 		 * to express the affinity level.
 		 */
-		ls = fls(affinity);
-		fs[i] = affinity ? ffs(affinity) - 1 : 0;
-		bits[i] = ls - fs[i];
+		ls = fls(affinity); // MSB position, 0b11111111 = 8, 0b01001100 = 7
+		fs[i] = affinity ? ffs(affinity) - 1 : 0; // 0b11111111 = 0, 0b01001100 = 2
+		bits[i] = ls - fs[i]; // 0b11111111 = 8, 0b01001100 = 5
 	}
 	/*
 	 * An index can be created from the MPIDR_EL1 by isolating the
@@ -143,14 +143,14 @@ static void __init smp_build_mpidr_hash(void)
 	 * of CPUs that is not an exact power of 2 and their bit
 	 * representation might contain holes, eg MPIDR_EL1[7:0] = {0x2, 0x80}.
 	 */
-	mpidr_hash.shift_aff[0] = MPIDR_LEVEL_SHIFT(0) + fs[0];
-	mpidr_hash.shift_aff[1] = MPIDR_LEVEL_SHIFT(1) + fs[1] - bits[0];
-	mpidr_hash.shift_aff[2] = MPIDR_LEVEL_SHIFT(2) + fs[2] -
+	mpidr_hash.shift_aff[0] = MPIDR_LEVEL_SHIFT(0) + fs[0]; // 0b11111111 = 0, 0b01001100 = 2
+	mpidr_hash.shift_aff[1] = MPIDR_LEVEL_SHIFT(1) + fs[1] - bits[0]; // 0b11111111 = 0, 0b01001100 = 5 (level 0 + (1+2)
+	mpidr_hash.shift_aff[2] = MPIDR_LEVEL_SHIFT(2) + fs[2] - // 0b11111111 = 0, 0b01001100 = 8 (level 1 + (1+2))
 						(bits[1] + bits[0]);
-	mpidr_hash.shift_aff[3] = MPIDR_LEVEL_SHIFT(3) +
+	mpidr_hash.shift_aff[3] = MPIDR_LEVEL_SHIFT(3) + // 0b11111111 = 8, 0b01001100 = 19 (level 2 + 8 + (1+2))
 				  fs[3] - (bits[2] + bits[1] + bits[0]);
 	mpidr_hash.mask = mask;
-	mpidr_hash.bits = bits[3] + bits[2] + bits[1] + bits[0];
+	mpidr_hash.bits = bits[3] + bits[2] + bits[1] + bits[0]; // 0b11111111 = 32, 0b01001100 = 20
 	pr_debug("MPIDR hash: aff0[%u] aff1[%u] aff2[%u] aff3[%u] mask[%#llx] bits[%u]\n",
 		mpidr_hash.shift_aff[0],
 		mpidr_hash.shift_aff[1],

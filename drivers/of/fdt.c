@@ -171,7 +171,7 @@ static void populate_properties(const void *blob,
 
 		if (pa < ps)
 			pa = p;
-		len = (pa - ps) + 1;
+		len = (pa - ps) + 1; /* from next slash to at or end */
 		pp = unflatten_dt_alloc(mem, sizeof(struct property) + len,
 					__alignof__(struct property));
 		if (!dryrun) {
@@ -295,9 +295,7 @@ static int unflatten_dt_nodes(const void *blob,
 	root = dad;
 	nps[depth] = dad;
 
-	for (offset = 0;
-	     offset >= 0 && depth >= initial_depth;
-	     offset = fdt_next_node(blob, offset, &depth)) {
+	for (offset = 0; offset >= 0 && depth >= initial_depth; offset = fdt_next_node(blob, offset, &depth)) {
 		if (WARN_ON_ONCE(depth >= FDT_MAX_DEPTH - 1))
 			continue;
 
@@ -311,7 +309,7 @@ static int unflatten_dt_nodes(const void *blob,
 			return ret;
 
 		if (!dryrun && nodepp && !*nodepp)
-			*nodepp = nps[depth+1];
+			*nodepp = nps[depth+1]; // of_root = "/" meaing device_node
 		if (!dryrun && !root)
 			root = nps[depth+1];
 	}
@@ -392,7 +390,7 @@ void *__unflatten_device_tree(const void *blob,
 
 	memset(mem, 0, size);
 
-	*(__be32 *)(mem + size) = cpu_to_be32(0xdeadbeef);
+	*(__be32 *)(mem + size) = cpu_to_be32(0xdeadbeef); // magic number
 
 	pr_debug("  unflattening %p...\n", mem);
 

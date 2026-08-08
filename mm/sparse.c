@@ -223,7 +223,7 @@ static void __init memory_present(int nid, unsigned long start, unsigned long en
 {
 	unsigned long pfn;
 
-	start &= PAGE_SECTION_MASK;
+	start &= PAGE_SECTION_MASK; // align down
 	mminit_validate_memmodel_limits(&start, &end);
 	for (pfn = start; pfn < end; pfn += PAGES_PER_SECTION) {
 		unsigned long section_nr = pfn_to_section_nr(pfn);
@@ -278,7 +278,7 @@ static unsigned long sparse_encode_mem_map(struct page *mem_map, unsigned long p
 	unsigned long coded_mem_map =
 		(unsigned long)(mem_map - (section_nr_to_pfn(pnum)));
 	BUILD_BUG_ON(SECTION_MAP_LAST_BIT > PFN_SECTION_SHIFT);
-	BUG_ON(coded_mem_map & ~SECTION_MAP_MASK);
+	BUG_ON(coded_mem_map & ~SECTION_MAP_MASK); // sanity check of no flag in codeded_mem_map
 	return coded_mem_map;
 }
 
@@ -298,7 +298,7 @@ static void __meminit sparse_init_one_section(struct mem_section *ms,
 		unsigned long pnum, struct page *mem_map,
 		struct mem_section_usage *usage, unsigned long flags)
 {
-	ms->section_mem_map &= ~SECTION_MAP_MASK;
+	ms->section_mem_map &= ~SECTION_MAP_MASK; // remove nid
 	ms->section_mem_map |= sparse_encode_mem_map(mem_map, pnum)
 		| SECTION_HAS_MEM_MAP | flags;
 	ms->usage = usage;
@@ -524,7 +524,7 @@ static void __init sparse_init_nid(int nid, unsigned long pnum_begin,
 			break;
 
 		map = __populate_section_memmap(pfn, PAGES_PER_SECTION,
-				nid, NULL, NULL);
+				nid, NULL, NULL); // struct page * : IF CONFIG_SPARSEMEM_VMEMMAP (vmemmap 공간) else (linear mapping 공간)
 		if (!map) {
 			pr_err("%s: node[%d] memory map backing failed. Some memory will not be available.",
 			       __func__, nid);

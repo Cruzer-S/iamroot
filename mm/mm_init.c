@@ -356,15 +356,15 @@ static void __init find_zone_movable_pfns_for_nodes(void)
 	 * If movable_node is specified, ignore kernelcore and movablecore
 	 * options.
 	 */
-	if (movable_node_is_enabled()) {
+	if (movable_node_is_enabled()) { // "movable_node" is exist in cmdline 
 		for_each_mem_region(r) {
-			if (!memblock_is_hotpluggable(r))
+			if (!memblock_is_hotpluggable(r)) // "hotpluggable" is not exist in device tree
 				continue;
 
 			nid = memblock_get_region_node(r);
 
 			usable_startpfn = memblock_region_memory_base_pfn(r);
-			zone_movable_pfn[nid] = zone_movable_pfn[nid] ?
+			zone_movable_pfn[nid] = zone_movable_pfn[nid] ? // min_not_zero
 				min(usable_startpfn, zone_movable_pfn[nid]) :
 				usable_startpfn;
 		}
@@ -378,7 +378,7 @@ static void __init find_zone_movable_pfns_for_nodes(void)
 	if (mirrored_kernelcore) {
 		bool mem_below_4gb_not_mirrored = false;
 
-		if (!memblock_has_mirror()) {
+		if (!memblock_has_mirror()) { // only can be set from efi..?
 			pr_warn("The system has no mirror memory, ignore kernelcore=mirror.\n");
 			goto out;
 		}
@@ -674,7 +674,7 @@ defer_init(int nid, unsigned long pfn, unsigned long end_pfn)
 {
 	static unsigned long prev_end_pfn, nr_initialised;
 
-	if (early_page_ext_enabled())
+	if (early_page_ext_enabled()) // early_param("early_page_ext", ...)
 		return false;
 
 	/* Always populate low zones for address-constrained allocations */
@@ -1413,7 +1413,7 @@ void __meminit init_currently_empty_zone(struct zone *zone,
 	int zone_idx = zone_idx(zone) + 1;
 
 	if (zone_idx > pgdat->nr_zones)
-		pgdat->nr_zones = zone_idx;
+		pgdat->nr_zones = zone_idx; // insert highest value
 
 	zone->zone_start_pfn = zone_start_pfn;
 
@@ -1767,7 +1767,7 @@ void __init free_area_init(unsigned long *max_zone_pfn)
 				sizeof(arch_zone_highest_possible_pfn));
 
 	start_pfn = PHYS_PFN(memblock_start_of_DRAM());
-	descending = arch_has_descending_max_zone_pfns();
+	descending = arch_has_descending_max_zone_pfns(); // always false in arm64
 
 	for (i = 0; i < MAX_NR_ZONES; i++) {
 		if (descending)

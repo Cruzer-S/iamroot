@@ -765,7 +765,7 @@ core_initcall(map_entry_trampoline);
  */
 static void __init declare_kernel_vmas(void)
 {
-	static struct vm_struct vmlinux_seg[KERNEL_SEGMENT_COUNT];
+	static struct vm_struct vmlinux_seg[KERNEL_SEGMENT_COUNT]; // should not removed, because it will pushed to vm_list
 
 	declare_vma(&vmlinux_seg[0], _stext, _etext, VM_NO_GUARD);
 	declare_vma(&vmlinux_seg[1], __start_rodata, __inittext_begin, VM_NO_GUARD);
@@ -1181,9 +1181,9 @@ int __meminit vmemmap_populate(unsigned long start, unsigned long end, int node,
 
 	if (!IS_ENABLED(CONFIG_ARM64_4K_PAGES) ||
 	    (end - start < PAGES_PER_SECTION * sizeof(struct page)))
-		return vmemmap_populate_basepages(start, end, node, altmap);
+		return vmemmap_populate_basepages(start, end, node, altmap); // on boot: 16k, 64k
 	else
-		return vmemmap_populate_hugepages(start, end, node, altmap);
+		return vmemmap_populate_hugepages(start, end, node, altmap); // on boot: 4k
 }
 
 #ifdef CONFIG_MEMORY_HOTPLUG

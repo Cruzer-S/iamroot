@@ -522,7 +522,7 @@ static u64 __of_translate_address(struct device_node *node,
 		pr_debug("Bad cell count for %pOF\n", dev);
 		return OF_BAD_ADDR;
 	}
-	memcpy(addr, in_addr, na * 4);
+	memcpy(addr, in_addr, na * 4); // sizeof(__be32)
 
 	pr_debug("bus is %s (na=%d, ns=%d) on %pOF\n",
 	    bus->name, na, ns, parent);
@@ -700,7 +700,9 @@ const __be32 *__of_get_address(struct device_node *dev, int index, int bar_no,
 	if (strcmp(bus->name, "pci") && (bar_no >= 0))
 		return NULL;
 
-	bus->count_cells(dev, &na, &ns);
+	// e.g) hip07.dtsi
+	// na = 2, ns = 2
+	bus->count_cells(dev, &na, &ns); 
 	if (!OF_CHECK_ADDR_COUNT(na))
 		return NULL;
 
@@ -708,7 +710,7 @@ const __be32 *__of_get_address(struct device_node *dev, int index, int bar_no,
 	prop = of_get_property(dev, bus->addresses, &psize);
 	if (prop == NULL)
 		return NULL;
-	psize /= 4;
+	psize /= 4; // sizeof(__be32)
 
 	onesize = na + ns;
 	for (i = 0; psize >= onesize; psize -= onesize, prop += onesize, i++) {

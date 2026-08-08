@@ -46,9 +46,8 @@ static phys_addr_t __init efi_to_phys(unsigned long addr)
 		if (md->virt_addr == 0)
 			/* no virtual mapping has been installed by the stub */
 			break;
-		if (md->virt_addr <= addr &&
-		    (addr - md->virt_addr) < (md->num_pages << EFI_PAGE_SHIFT))
-			return md->phys_addr + addr - md->virt_addr;
+		if (md->virt_addr <= addr && (addr - md->virt_addr) < (md->num_pages << EFI_PAGE_SHIFT))
+			return md->phys_addr + addr - md->virt_addr; // EFI virtual address -> linear mapping, so (addr - md->virt_addr) = offset
 	}
 	return addr;
 }
@@ -87,7 +86,7 @@ static void __init init_screen_info(void)
 	}
 }
 
-static int __init uefi_init(u64 efi_system_table)
+static int __init uefi_init(u64 efi_system_table) // efi_system_table = efi_get_fdt_params(&data);
 {
 	efi_config_table_t *config_tables;
 	efi_system_table_t *systab;
@@ -186,7 +185,7 @@ static __init void reserve_regions(void)
 		memrange_efi_to_native(&paddr, &npages);
 		size = npages << PAGE_SHIFT;
 
-		if (is_memory(md)) {
+		if (is_memory(md)) { // if writable
 			/*
 			 * Special purpose memory is 'soft reserved', which
 			 * means it is set aside initially. Don't add a memblock

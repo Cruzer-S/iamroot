@@ -55,15 +55,15 @@
 
 #if VA_BITS > 48
 #ifdef CONFIG_ARM64_16K_PAGES
-#define VA_BITS_MIN		(47)
+#define VA_BITS_MIN		(47) // 11 + 11 + 11 + 14
 #else
-#define VA_BITS_MIN		(48)
+#define VA_BITS_MIN		(48) // 9 + 9 + 9 + 9 + 12, 6 + 13 + 13 + 16
 #endif
 #else
 #define VA_BITS_MIN		(VA_BITS)
 #endif
 
-#define _PAGE_END(va)		(-(UL(1) << ((va) - 1)))
+#define _PAGE_END(va)		(-(UL(1) << ((va) - 1))) // if va = 48, last trailing zero count is 47
 
 #define KERNEL_START		_text
 #define KERNEL_END		_end

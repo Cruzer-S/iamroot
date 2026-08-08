@@ -179,9 +179,9 @@ int __init of_numa_init(void)
 {
 	int r;
 
-	of_numa_parse_cpu_nodes();
-	r = of_numa_parse_memory_nodes();
+	of_numa_parse_cpu_nodes(); // set numa_nodes_parsed, bitmask which is enabled node nid
+	r = of_numa_parse_memory_nodes(); // set numa_meminfo, add inner numa_memblks
 	if (r)
 		return r;
-	return of_numa_parse_distance_map();
+	return of_numa_parse_distance_map(); // set numa_distance, numa_distance_cnt
 }

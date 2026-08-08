@@ -2407,8 +2407,8 @@ struct pcpu_alloc_info * __init pcpu_alloc_alloc_info(int nr_groups,
 	void *ptr;
 	int unit;
 
-	base_size = ALIGN(struct_size(ai, groups, nr_groups),
-			  __alignof__(ai->groups[0].cpu_map[0]));
+	base_size = ALIGN(struct_size(ai, groups, nr_groups), // pcpu_alloc_info itself
+			  __alignof__(ai->groups[0].cpu_map[0])); // 4byte
 	ai_size = base_size + nr_units * sizeof(ai->groups[0].cpu_map[0]);
 
 	ptr = memblock_alloc(PFN_ALIGN(ai_size), PAGE_SIZE);
@@ -2667,7 +2667,7 @@ void __init pcpu_setup_first_chunk(const struct pcpu_alloc_info *ai,
 
 	/* determine basic parameters */
 	pcpu_unit_pages = ai->unit_size >> PAGE_SHIFT;
-	pcpu_unit_size = pcpu_unit_pages << PAGE_SHIFT;
+	pcpu_unit_size = pcpu_unit_pages << PAGE_SHIFT; // maybe equivalent to ai->unit_size
 	pcpu_atom_size = ai->atom_size;
 	pcpu_chunk_struct_size = struct_size((struct pcpu_chunk *)0, populated,
 					     BITS_TO_LONGS(pcpu_unit_pages));
@@ -2844,7 +2844,7 @@ static struct pcpu_alloc_info * __init __flatten pcpu_build_alloc_info(
 	/* determine the maximum # of units that can fit in an allocation */
 	alloc_size = roundup(min_unit_size, atom_size);
 	upa = alloc_size / min_unit_size;
-	while (alloc_size % upa || (offset_in_page(alloc_size / upa)))
+	while (alloc_size % upa || (offset_in_page(alloc_size / upa))) // alloc_size should be multiple of PAGE_SIZE, else runtime error
 		upa--;
 	max_upa = upa;
 
@@ -2880,7 +2880,7 @@ static struct pcpu_alloc_info * __init __flatten pcpu_build_alloc_info(
 	for (upa = max_upa; upa; upa--) {
 		int allocs = 0, wasted = 0;
 
-		if (alloc_size % upa || (offset_in_page(alloc_size / upa)))
+		if (alloc_size % upa || (offset_in_page(alloc_size / upa))) // when upa = max_upa, always false
 			continue;
 
 		for (group = 0; group < nr_groups; group++) {
@@ -2908,12 +2908,12 @@ static struct pcpu_alloc_info * __init __flatten pcpu_build_alloc_info(
 
 	/* allocate and fill alloc_info */
 	for (group = 0; group < nr_groups; group++)
-		nr_units += roundup(group_cnt[group], upa);
+		nr_units += roundup(group_cnt[group], upa); // 32 -> 32, 12 -> 16, 11 -> 12
 
 	ai = pcpu_alloc_alloc_info(nr_groups, nr_units);
 	if (!ai)
 		return ERR_PTR(-ENOMEM);
-	cpu_map = ai->groups[0].cpu_map;
+	cpu_map = ai->groups[0].cpu_map; // ptr
 
 	for (group = 0; group < nr_groups; group++) {
 		ai->groups[group].cpu_map = cpu_map;

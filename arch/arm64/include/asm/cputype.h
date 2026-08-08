@@ -16,10 +16,10 @@
 #define MPIDR_LEVEL_MASK	((1 << MPIDR_LEVEL_BITS) - 1)
 
 #define MPIDR_LEVEL_SHIFT(level) \
-	(((1 << level) >> 1) << MPIDR_LEVEL_BITS_SHIFT)
+	(((1 << level) >> 1) << MPIDR_LEVEL_BITS_SHIFT) // [0, 1, 2, 3] -> [0, 8, 16, 32]
 
 #define MPIDR_AFFINITY_LEVEL(mpidr, level) \
-	((mpidr >> MPIDR_LEVEL_SHIFT(level)) & MPIDR_LEVEL_MASK)
+	((mpidr >> MPIDR_LEVEL_SHIFT(level)) & MPIDR_LEVEL_MASK) // 0xab00cdef12 : level(0) = 0x12, level(1) = 0xef
 
 #define MIDR_REVISION_MASK	0xf
 #define MIDR_REVISION(midr)	((midr) & MIDR_REVISION_MASK)

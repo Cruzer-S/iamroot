@@ -429,7 +429,7 @@ static struct xbc_node * __init xbc_add_node(char *data, uint32_t flag)
 		return NULL;
 
 	node = &xbc_nodes[xbc_node_num++];
-	if (xbc_init_node(node, data, flag) < 0)
+	if (xbc_init_node(node, data, flag) < 0) // xbc_nodes[0]=foo|KEY, xbc_nodes[1]=bar|KEY, xbc_nodes[2]=v1|VALUE, xbc_nodes[3]=bar|KEY
 		return NULL;
 
 	return node;
@@ -460,12 +460,12 @@ static struct xbc_node * __init __xbc_add_sibling(char *data, uint32_t flag, boo
 			/* Ignore @head in this case */
 			node->parent = XBC_NODE_MAX;
 			sib = xbc_last_sibling(xbc_nodes);
-			sib->next = xbc_node_index(node);
+			sib->next = xbc_node_index(node); // xbc_nodes[0]->next=0
 		} else {
-			node->parent = xbc_node_index(last_parent);
+			node->parent = xbc_node_index(last_parent); // xbc_node[1]->parent=0, xbc_node[2]->parent=1, xbc_node[3]->parent=1
 			if (!last_parent->child || head) {
 				node->next = last_parent->child;
-				last_parent->child = xbc_node_index(node);
+				last_parent->child = xbc_node_index(node); // xbc_node[0]->child=1, xbc_node[1]->child=2
 			} else {
 				sib = xbc_node_get_child(last_parent);
 				sib = xbc_last_sibling(sib);
@@ -532,7 +532,7 @@ static char *skip_spaces_until_newline(char *p)
 static int __init __xbc_open_brace(char *p)
 {
 	/* Push the last key as open brace */
-	open_brace[brace_index++] = xbc_node_index(last_parent);
+	open_brace[brace_index++] = xbc_node_index(last_parent); // open_brace[0]=0 -> open_brace[1]=1
 	if (brace_index >= XBC_DEPTH_MAX)
 		return xbc_parse_error("Exceed max depth of braces", p);
 
@@ -690,7 +690,7 @@ static int __init __xbc_parse_keys(char *k)
 	return __xbc_add_key(k);
 }
 
-static int __init xbc_parse_kv(char **k, char *v, int op)
+static int __init xbc_parse_kv(char **k, char *v, int op) // k='\n', v='v'1(next of '='), op='=' -> k='b'az, v='v'2, op='='
 {
 	struct xbc_node *prev_parent = last_parent;
 	struct xbc_node *child;
@@ -701,7 +701,7 @@ static int __init xbc_parse_kv(char **k, char *v, int op)
 	if (ret)
 		return ret;
 
-	c = __xbc_parse_value(&v, &next);
+	c = __xbc_parse_value(&v, &next); // v='v'1, next='b'ar(next of '\n')
 	if (c < 0)
 		return c;
 
@@ -743,7 +743,7 @@ array:
 	return 0;
 }
 
-static int __init xbc_parse_key(char **k, char *n)
+static int __init xbc_parse_key(char **k, char *n) // k='{', n='\n'(next of '=') -> k='\n', n='b'az
 {
 	struct xbc_node *prev_parent = last_parent;
 	int ret;
@@ -760,7 +760,7 @@ static int __init xbc_parse_key(char **k, char *n)
 	return 0;
 }
 
-static int __init xbc_open_brace(char **k, char *n)
+static int __init xbc_open_brace(char **k, char *n) // k='f'oo, n='\n'(next of '{') -> k='b'ar, n='\n'(next of '{')
 {
 	int ret;
 

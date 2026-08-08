@@ -253,9 +253,9 @@ static void __init lsm_set_blob_size(int *need, int *lbs)
 	if (*need <= 0)
 		return;
 
-	offset = ALIGN(*lbs, sizeof(void *));
-	*lbs = offset + *need;
-	*need = offset;
+	offset = ALIGN(*lbs, sizeof(void *)); // 1st: need=20, lbs=0, 2nd: need=20, lbs=20 
+	*lbs = offset + *need; // 1st: lbs=0+20, 2nd: lbs=24+20
+	*need = offset; // 1st: need=0, 2nd: need=24
 }
 
 static void __init lsm_set_blob_sizes(struct lsm_blob_sizes *needed)

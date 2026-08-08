@@ -431,6 +431,21 @@ static const struct of_device_id __rmem_of_table_sentinel
  */
 static int __init __reserved_mem_init_node(struct reserved_mem *rmem)
 {
+
+	/**
+	 *
+	 * #define _OF_DECLARE(table, name, compat, fn, fn_type)			\
+		static const struct of_device_id __of_table_##name		\
+		__used __section("__" #table "_of_table")		\
+		__aligned(__alignof__(struct of_device_id))		\
+		 = { .compatible = compat,				\
+		     .data = (fn == (fn_type)NULL) ? fn : fn  }
+	 *
+	 *
+	 * #define RESERVEDMEM_OF_DECLARE(name, compat, init)			\
+		_OF_DECLARE(reservedmem, name, compat, init, reservedmem_of_init_fn)
+	 */
+
 	extern const struct of_device_id __reservedmem_of_table[];
 	const struct of_device_id *i;
 	int ret = -ENOENT;

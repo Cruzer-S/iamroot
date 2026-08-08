@@ -197,7 +197,7 @@ static void __init numa_move_tail_memblk(struct numa_meminfo *dst, int idx,
  */
 int __init numa_add_memblk(int nid, u64 start, u64 end)
 {
-	return numa_add_memblk_to(nid, start, end, &numa_meminfo);
+	return numa_add_memblk_to(nid, start, end, &numa_meminfo); // static struct numa_meminfo numa_meminfo __initdata_or_meminfo;
 }
 
 /**
@@ -385,7 +385,7 @@ static int __init numa_register_meminfo(struct numa_meminfo *mi)
 		struct numa_memblk *mb = &mi->blk[i];
 
 		memblock_set_node(mb->start, mb->end - mb->start,
-				  &memblock.memory, mb->nid);
+				  &memblock.memory, mb->nid); // after here no NUMA_NO_NODE on memblock
 	}
 
 	/*
@@ -450,7 +450,7 @@ int __init numa_memblks_init(int (*init_func)(void),
 	if (memblock_force_top_down)
 		memblock_set_bottom_up(false);
 
-	ret = numa_cleanup_meminfo(&numa_meminfo);
+	ret = numa_cleanup_meminfo(&numa_meminfo); // merged with cover hole + move to reserved if non overlapped
 	if (ret < 0)
 		return ret;
 

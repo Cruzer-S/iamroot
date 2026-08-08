@@ -235,7 +235,7 @@ static int __static_call_init(struct module *mod,
 
 		if ((mod && within_module_init((unsigned long)site_addr, mod)) ||
 		    (!mod && init_section_contains(site_addr, 1)))
-			static_call_set_init(site);
+			static_call_set_init(site); // flag on
 
 		key = static_call_key(site);
 		if (key != prev_key) {

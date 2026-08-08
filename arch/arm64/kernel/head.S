@@ -199,21 +199,25 @@ SYM_CODE_END(preserve_boot_args)
 	 * for consistency with user tasks and kthreads.
 	 */
 	.macro	init_cpu_task tsk, tmp1, tmp2
-	msr	sp_el0, \tsk
+	msr	sp_el0, \tsk // sp_el0 = x4 = init_task
 
-	ldr	\tmp1, [\tsk, #TSK_STACK]
-	add	sp, \tmp1, #THREAD_SIZE
-	sub	sp, sp, #PT_REGS_SIZE
+	//   DEFINE(TSK_STACK, offsetof(struct task_struct, stack)); = init_stack -> linker script 의 data section	
+	ldr	\tmp1, [\tsk, #TSK_STACK] // tmp1 = init_stack
 
-	stp	xzr, xzr, [sp, #S_STACKFRAME]
-	add	x29, sp, #S_STACKFRAME
+	add	sp, \tmp1, #THREAD_SIZE // sp = init_stack + thread size(Sinlge Page Size)
+	sub	sp, sp, #PT_REGS_SIZE // sp = sp - sizeof(struct pt_regs) => 스택 맨위의 pt_regs 공간 확보
+
+	stp	xzr, xzr, [sp, #S_STACKFRAME] // init_stack 의 pt_regs stackframe[2] = {0, 0}
+	add	x29, sp, #S_STACKFRAME // x29 = &pt_regs->stackframe
 
 	scs_load_current
 
-	adr_l	\tmp1, __per_cpu_offset
-	ldr	w\tmp2, [\tsk, #TSK_TI_CPU]
-	ldr	\tmp1, [\tmp1, \tmp2, lsl #3]
-	set_this_cpu_offset \tmp1
+	adr_l	\tmp1, __per_cpu_offset // mm/percpu.h, tmp1 = &__per_cpu_offset
+	ldr	w\tmp2, [\tsk, #TSK_TI_CPU] // tmp2 = init_task->thread_info.cpu 
+
+	// per_cpu_offset 은 bss_section 으로 아마 가지 않을까 -> early_map_kernel 에서 0 으로 memset
+	ldr	\tmp1, [\tmp1, \tmp2, lsl #3] // tmp1 = &__per_cpu_offset + (init_task->thread_info.cpu * 8) = __per_cpu_offset[init_task->thread_info.cpu] 
+	set_this_cpu_offset \tmp1 // TPIDR_el1 = tmp1
 	.endm
 
 /*
@@ -222,19 +226,20 @@ SYM_CODE_END(preserve_boot_args)
  *   x0 = __pa(KERNEL_START)
  */
 SYM_FUNC_START_LOCAL(__primary_switched)
-	adr_l	x4, init_task
+	adr_l	x4, init_task // x4 = &init_task from init_task.c 
 	init_cpu_task x4, x5, x6
 
-	adr_l	x8, vectors			// load VBAR_EL1 with virtual
-	msr	vbar_el1, x8			// vector table address
+	adr_l	x8, vectors			// load VBAR_EL1 with virtual, entry.S 의 SYM_CODE_START(vectors)
+	msr	vbar_el1, x8			// vector table address, vbar_el1 = SYM_CODE_START(vectors)
 	isb
 
-	stp	x29, x30, [sp, #-16]!
-	mov	x29, sp
+	stp	x29, x30, [sp, #-16]! // sp - 16 = &pt_regs->stackframe, sp - 8 = x30(link register, bl __pi_early_map_kernel 다음 줄), 느낌표 pre-index 때문에
+	mov	x29, sp // x29 = sp
+	// 현 시점 init_stack 은 pt_regs .. x29 .. x30 이렇게 쌓여있는거임
 
-	str_l	x21, __fdt_pointer, x5		// Save FDT pointer
+	str_l	x21, __fdt_pointer, x5		// Save FDT pointer, __fdt_pointer = x21
 
-	adrp	x4, _text			// Save the offset between
+	adrp	x4, _text			// Save the offset between, if aligned no need to use adr_l
 	sub	x4, x4, x0			// the kernel virtual and
 	str_l	x4, kimage_voffset, x5		// physical mappings
 

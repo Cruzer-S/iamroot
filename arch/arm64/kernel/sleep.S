@@ -86,9 +86,9 @@ SYM_FUNC_START(__cpu_suspend_enter)
 	ldp	w3, w4, [x9, #MPIDR_HASH_SHIFTS]
 	ldp	w5, w6, [x9, #(MPIDR_HASH_SHIFTS + 8)]
 	compute_mpidr_hash x8, x3, x4, x5, x6, x7, x10
-	add	x1, x1, x8, lsl #3
+	add	x1, x1, x8, lsl #3 // equivalent sleep_save_stash[x8]
 
-	str	x0, [x1]
+	str	x0, [x1] // sleep_save_stash[x8] = struct sleep_stack_data *state
 	add	x0, x0, #SLEEP_STACK_DATA_SYSTEM_REGS
 	stp	x29, lr, [sp, #-16]!
 	bl	cpu_do_suspend
@@ -128,7 +128,7 @@ SYM_FUNC_START(_cpu_resume)
 
 	/* x7 contains hash index, let's use it to grab context pointer */
 	ldr_l	x0, sleep_save_stash
-	ldr	x0, [x0, x7, lsl #3]
+	ldr	x0, [x0, x7, lsl #3] // x0 = sleep_save_stash[x7] = previous saved in __cpu_suspend_enter struct sleep_stack_data *state
 	add	x29, x0, #SLEEP_STACK_DATA_CALLEE_REGS
 	add	x0, x0, #SLEEP_STACK_DATA_SYSTEM_REGS
 	/* load sp from context */

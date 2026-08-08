@@ -513,7 +513,7 @@ int __init acpi_numa_init(void)
 	 */
 
 	/* SRAT: System Resource Affinity Table */
-	if (!acpi_table_parse(ACPI_SIG_SRAT, acpi_parse_srat)) {
+	if (!acpi_table_parse(ACPI_SIG_SRAT, acpi_parse_srat)) { // if "SRAT(System Resource Affinity Table)" exists
 		struct acpi_subtable_proc srat_proc[5];
 
 		memset(srat_proc, 0, sizeof(srat_proc));

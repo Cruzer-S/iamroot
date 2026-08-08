@@ -88,7 +88,7 @@ static int __init early_cma(char *p)
 
 	return 0;
 }
-early_param("cma", early_cma);
+early_param("cma", early_cma); // 1M@3M-4M
 
 #ifdef CONFIG_DMA_NUMA_CMA
 
@@ -226,7 +226,7 @@ void __init dma_contiguous_reserve(phys_addr_t limit)
 		if (base_cmdline + size_cmdline == limit_cmdline)
 			fixed = true;
 	} else {
-#ifdef CONFIG_CMA_SIZE_SEL_MBYTES
+#ifdef CONFIG_CMA_SIZE_SEL_MBYTES // prompt "Selected region size"
 		selected_size = size_bytes;
 #elif defined(CONFIG_CMA_SIZE_SEL_PERCENTAGE)
 		selected_size = cma_early_percent_memory();

@@ -127,7 +127,7 @@ __invoke_psci_fn_smc(unsigned long function_id,
 	struct arm_smccc_res res;
 
 	arm_smccc_smc(function_id, arg0, arg1, arg2, 0, 0, 0, 0, &res);
-	return res.a0;
+	return res.a0; // smc return value
 }
 
 static __always_inline int psci_to_linux_errno(int errno)
@@ -154,7 +154,7 @@ static u32 psci_0_1_get_version(void)
 
 static u32 psci_0_2_get_version(void)
 {
-	return invoke_psci_fn(PSCI_0_2_FN_PSCI_VERSION, 0, 0, 0);
+	return invoke_psci_fn(PSCI_0_2_FN_PSCI_VERSION /* 0x84000000 */, 0, 0, 0);
 }
 
 int psci_set_osi_mode(bool enable)

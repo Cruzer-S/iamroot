@@ -421,7 +421,7 @@ void set_pfnblock_flags_mask(struct page *page, unsigned long flags,
 	BUILD_BUG_ON(NR_PAGEBLOCK_BITS != 4);
 	BUILD_BUG_ON(MIGRATE_TYPES > (1 << PB_migratetype_bits));
 
-	bitmap = get_pageblock_bitmap(page, pfn);
+	bitmap = get_pageblock_bitmap(page, pfn); // usemap
 	bitidx = pfn_to_bitidx(page, pfn);
 	word_bitidx = bitidx / BITS_PER_LONG;
 	bitidx &= (BITS_PER_LONG-1);
@@ -5767,7 +5767,7 @@ static void zone_set_pageset_high_and_batch(struct zone *zone, int cpu_online)
 
 	if (zone->pageset_high_min == new_high_min &&
 	    zone->pageset_high_max == new_high_max &&
-	    zone->pageset_batch == new_batch)
+	    zone->pageset_batch == new_batch)decay_pcp_highdecay_pcp_high
 		return;
 
 	zone->pageset_high_min = new_high_min;

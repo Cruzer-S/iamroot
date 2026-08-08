@@ -271,7 +271,7 @@ int __init cma_declare_contiguous_nid(phys_addr_t base,
 	}
 	base = ALIGN(base, alignment);
 	size = ALIGN(size, alignment);
-	limit &= ~(alignment - 1);
+	limit &= ~(alignment - 1); // ALIGN_DOWN
 
 	if (!base)
 		fixed = false;
@@ -328,7 +328,7 @@ int __init cma_declare_contiguous_nid(phys_addr_t base,
 		if (!memblock_bottom_up() && memblock_end >= SZ_4G + size) {
 			memblock_set_bottom_up(true);
 			addr = memblock_alloc_range_nid(size, alignment, SZ_4G,
-							limit, nid, true);
+							limit, nid, true); // if failed, try high mem
 			memblock_set_bottom_up(false);
 		}
 #endif
@@ -342,7 +342,7 @@ int __init cma_declare_contiguous_nid(phys_addr_t base,
 		if (!addr && base < highmem_start && limit > highmem_start) {
 			addr = memblock_alloc_range_nid(size, alignment,
 					highmem_start, limit, nid, true);
-			limit = highmem_start;
+			limit = highmem_start; // if failed, try low mem
 		}
 
 		if (!addr) {

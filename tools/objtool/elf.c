@@ -866,8 +866,8 @@ static struct reloc *elf_init_reloc(struct elf *elf, struct section *rsec,
 		return NULL;
 	}
 
-	reloc->sec = rsec;
-	reloc->sym = sym;
+	reloc->sec = rsec; // .rela.static_call_sites
+	reloc->sym = sym; // .text
 
 	set_reloc_offset(elf, reloc, offset);
 	set_reloc_sym(elf, reloc, sym->idx);

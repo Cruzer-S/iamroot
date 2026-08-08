@@ -68,6 +68,7 @@ static void __iomem *prev_map[FIX_BTMAPS_SLOTS] __initdata;
 static unsigned long prev_size[FIX_BTMAPS_SLOTS] __initdata;
 static unsigned long slot_virt[FIX_BTMAPS_SLOTS] __initdata;
 
+// mmio 를 지원하기 위해 -> ioremap
 void __init early_ioremap_setup(void)
 {
 	int i;
@@ -107,6 +108,7 @@ __early_ioremap(resource_size_t phys_addr, unsigned long size, pgprot_t prot)
 
 	WARN_ON(system_state >= SYSTEM_RUNNING);
 
+	// find empty slot
 	slot = -1;
 	for (i = 0; i < FIX_BTMAPS_SLOTS; i++) {
 		if (!prev_map[i]) {
@@ -115,6 +117,7 @@ __early_ioremap(resource_size_t phys_addr, unsigned long size, pgprot_t prot)
 		}
 	}
 
+	// if there is no empty slot
 	if (WARN(slot < 0, "%s(%pa, %08lx) not found slot\n",
 		 __func__, &phys_addr, size))
 		return NULL;
@@ -128,15 +131,15 @@ __early_ioremap(resource_size_t phys_addr, unsigned long size, pgprot_t prot)
 	/*
 	 * Mappings have to be page-aligned
 	 */
-	offset = offset_in_page(phys_addr);
-	phys_addr &= PAGE_MASK;
-	size = PAGE_ALIGN(last_addr + 1) - phys_addr;
+	offset = offset_in_page(phys_addr); // lower 12 bits
+	phys_addr &= PAGE_MASK; // upper 48 bits
+	size = PAGE_ALIGN(last_addr + 1) - phys_addr; // 4KB * nr_page
 
 	/*
 	 * Mappings have to fit in the FIX_BTMAP area.
 	 */
 	nrpages = size >> PAGE_SHIFT;
-	if (WARN_ON(nrpages > NR_FIX_BTMAPS))
+	if (WARN_ON(nrpages > NR_FIX_BTMAPS)) // over 64 (if page 4K)
 		return NULL;
 
 	/*

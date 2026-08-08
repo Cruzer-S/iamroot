@@ -656,7 +656,7 @@ repeat:
 				end_rgn = idx + 1;
 				memblock_insert_region(type, idx++, base,
 						       rbase - base, nid,
-						       flags);
+						       flags); // 삽입하면 idx 가 1개 추가되므로 idx++ 임
 			}
 		}
 		/* area below @rend is dealt with, forget about it */
